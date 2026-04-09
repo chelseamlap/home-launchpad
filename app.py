@@ -212,7 +212,26 @@ if __name__ == "__main__":
     port = config.PORT
     logger.info(f"Starting The Home Launchpad on port {port}")
 
-    # Open browser after a short delay to let Flask start
-    threading.Timer(1.5, webbrowser.open, args=[f"http://localhost:{port}"]).start()
+    # Open Chrome in app mode (no URL bar/tabs) after Flask starts
+    import subprocess
+    import platform
+
+    def open_app_mode():
+        url = f"http://localhost:{port}"
+        system = platform.system()
+        try:
+            if system == "Darwin":
+                subprocess.Popen([
+                    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+                    f"--app={url}", "--start-maximized"
+                ])
+            elif system == "Linux":
+                subprocess.Popen(["chromium-browser", f"--app={url}", "--start-maximized"])
+            else:
+                webbrowser.open(url)
+        except FileNotFoundError:
+            webbrowser.open(url)
+
+    threading.Timer(1.5, open_app_mode).start()
 
     app.run(host="0.0.0.0", port=port, debug=False)
