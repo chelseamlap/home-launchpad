@@ -637,54 +637,26 @@ h2.section-title:first-child { margin-top: 0; }
 .status-dot.disconnected { background: var(--red); }
 
 /* ============================================================
-   MUSIC / GOOGLE HOME SECTION
+   GOOGLE HOME + ECOBEE (compact pair)
    ============================================================ */
-.music-now-playing {
+.widget-pair {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px;
-  background: var(--bg-card-alt);
-  border-radius: 8px;
-  margin-bottom: 8px;
+  gap: 10px;
+  margin-bottom: 14px;
 }
-.music-icon { font-size: 32px; }
-.music-info { flex: 1; }
-.music-track { font-size: 15px; color: var(--text-bright); font-weight: 600; }
-.music-artist { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
-.music-device { font-size: 11px; color: var(--accent); margin-top: 4px; }
-.music-placeholder {
+.widget-mini {
+  flex: 1;
+  padding: 10px 14px;
+  margin-bottom: 0;
+}
+.widget-mini .card-title { font-size: 11px; margin-bottom: 6px; }
+.mini-placeholder {
   text-align: center;
-  padding: 16px;
+  padding: 8px;
   color: var(--text-dim);
-  font-size: 14px;
+  font-size: 12px;
   background: var(--bg-card-alt);
-  border-radius: 8px;
-  line-height: 1.5;
-}
-
-/* ============================================================
-   ECOBEE / THERMOSTAT
-   ============================================================ */
-.thermostat-display {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px;
-  background: var(--bg-card-alt);
-  border-radius: 8px;
-}
-.thermostat-temp { font-size: 36px; font-weight: 700; color: var(--text-bright); }
-.thermostat-details { flex: 1; font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-.thermostat-mode { color: var(--green); font-weight: 600; }
-.thermostat-placeholder {
-  text-align: center;
-  padding: 20px;
-  color: var(--text-dim);
-  font-size: 14px;
-  border: 2px dashed var(--border);
-  border-radius: 8px;
-  line-height: 1.5;
+  border-radius: 6px;
 }
 
 /* ============================================================
@@ -879,25 +851,15 @@ h2.section-title:first-child { margin-top: 0; }
             <div id="today-chores"></div>
           </div>
 
-          <!-- Music / Google Home -->
-          <div class="card">
-            <div class="card-title">&#127925; Now Playing &mdash; Google Home</div>
-            <div id="music-now-playing">
-              <div class="music-placeholder">
-                Google Home integration coming soon.<br>
-                Will show what's currently playing on your speakers.
-              </div>
+          <!-- Google Home + Ecobee side by side -->
+          <div class="widget-pair">
+            <div class="card widget-mini">
+              <div class="card-title">&#127925; Google Home</div>
+              <div id="music-now-playing" class="mini-placeholder">Coming soon</div>
             </div>
-          </div>
-
-          <!-- Ecobee / Thermostat -->
-          <div class="card">
-            <div class="card-title">&#127777; Thermostat &mdash; Ecobee</div>
-            <div id="ecobee-status">
-              <div class="thermostat-placeholder">
-                Ecobee integration coming soon.<br>
-                Will show current temp, set point, and mode.
-              </div>
+            <div class="card widget-mini">
+              <div class="card-title">&#127777; Ecobee</div>
+              <div id="ecobee-status" class="mini-placeholder">Coming soon</div>
             </div>
           </div>
         </div>
@@ -910,21 +872,21 @@ h2.section-title:first-child { margin-top: 0; }
             <div id="today-events" class="loading">Loading calendar...</div>
           </div>
 
-          <!-- This Week's Events -->
+          <!-- Weekend Plans & Ideas -->
           <div class="card">
-            <div class="card-title">This Week</div>
-            <div id="week-events" class="loading">Loading...</div>
-          </div>
-
-          <!-- Weekend Intentions -->
-          <div class="card">
-            <div class="card-title">Weekend Intentions</div>
+            <div class="card-title">Weekend Plans & Ideas</div>
             <div class="intention-label">Saturday</div>
             <textarea class="intention-field" id="intention-sat" rows="2" placeholder="What's the plan?"
                       oninput="saveIntention('sat',this.value)"></textarea>
             <div class="intention-label">Sunday</div>
             <textarea class="intention-field" id="intention-sun" rows="2" placeholder="What's the plan?"
                       oninput="saveIntention('sun',this.value)"></textarea>
+          </div>
+
+          <!-- This Week's Events -->
+          <div class="card">
+            <div class="card-title">This Week</div>
+            <div id="week-events" class="loading">Loading...</div>
           </div>
 
           <!-- Talk About Preview -->
