@@ -1,10 +1,10 @@
-# The Home Launchpad
+# Home Launchpad
 
 A touch-optimized family command center for a 24" Dell touchscreen on a Raspberry Pi 4. Five tabs: Today + This Week, Lists, Calendar, Home, Money.
 
 **New here?** Start with these guides:
-- **[implementation.md](implementation.md)** — Step-by-step setup from scratch (written for non-technical users)
-- **[updates.md](updates.md)** — How to update the Pi, change settings, and request new features
+- **[implementation.md](docs/implementation.md)** — Step-by-step setup from scratch (written for non-technical users)
+- **[updates.md](docs/updates.md)** — How to update the Pi, change settings, and request new features
 
 ## Architecture
 
@@ -332,18 +332,22 @@ You can also edit `data/settings.json` directly:
 
 ```
 home-launchpad/
-├── implementation.md       # Setup guide for non-technical users
-├── updates.md              # How to update, change settings, request features
 ├── app.py                  # Flask server + API routes
 ├── config.py               # Configuration & settings
-├── weather.py              # Open-Meteo weather API
-├── reminders_bridge.py     # Apple Reminders bridge (JXA / CalDAV / local JSON)
-├── google_auth.py          # Google OAuth2 handler
-├── google_calendar.py      # Google Calendar API (multi-calendar)
-├── google_sheets.py        # Google Sheets API (budget)
-├── setup_google_oauth.py   # One-time OAuth setup script
+├── setup_google_oauth.py   # Convenience wrapper for OAuth setup
 ├── requirements.txt        # Python dependencies
 ├── .gitignore              # Excludes secrets & data files from git
+├── docs/
+│   ├── implementation.md   # Setup guide for non-technical users
+│   └── updates.md          # How to update, change settings, request features
+├── server/
+│   ├── __init__.py
+│   ├── weather.py          # Open-Meteo weather API
+│   ├── reminders_bridge.py # Apple Reminders bridge (JXA / CalDAV / local JSON)
+│   ├── google_auth.py      # Google OAuth2 handler
+│   ├── google_calendar.py  # Google Calendar API (multi-calendar)
+│   ├── google_sheets.py    # Google Sheets API (budget)
+│   └── setup_google_oauth.py # One-time OAuth setup script
 ├── templates/
 │   └── index.html          # Full single-page dashboard UI
 ├── client_secret.json      # (you provide, gitignored) Google OAuth credentials

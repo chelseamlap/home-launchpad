@@ -1,5 +1,7 @@
 # Updating The Home Launchpad
 
+> **Note:** Replace `your-username@your-pi-ip` in commands below with your Pi's actual username and IP address. Run `hostname -I` on the Pi to find its IP.
+
 How to make changes, update the Pi, and common things you might want to do.
 
 ---
@@ -151,9 +153,7 @@ Check that `data/icloud_creds.json` has the right Apple ID and app-specific pass
 
 ### Weather is wrong or missing
 
-Go to **Home > Settings** and check that latitude/longitude are correct for ***REMOVED***
-***REMOVED***
-your location. Find your coordinates at https://www.latlong.net/
+Go to **Home > Settings** and check that latitude/longitude are correct for your location. Find your coordinates at https://www.latlong.net/
 
 ### Screen went black / Chrome closed
 

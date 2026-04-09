@@ -2,6 +2,8 @@
 
 A step-by-step guide to getting the family dashboard running on the Raspberry Pi kitchen display.
 
+> **Before you start:** You'll need your Pi's hostname (or IP address) and username. To find your Pi's IP address, run `hostname -I` on the Pi. Your SSH connection will look like `ssh your-username@your-pi-ip`.
+
 ---
 
 ## What You Need
