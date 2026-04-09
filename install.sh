@@ -43,10 +43,17 @@ mkdir -p data
 # --- Prompt for location ---
 echo ""
 echo "─── Location Setup (for weather) ───"
+echo "  You can set this later from the Home tab if you don't know your coordinates."
+echo "  Find them at https://www.latlong.net/"
 echo ""
-read -p "City name (e.g. Portland, OR): " CITY
-read -p "Latitude (e.g. 45.5152): " LAT
-read -p "Longitude (e.g. -122.6784): " LON
+read -p "City name (e.g. Portland, OR) [skip]: " CITY
+read -p "Latitude (e.g. 45.5152) [skip]: " LAT
+read -p "Longitude (e.g. -122.6784) [skip]: " LON
+
+# Default to 0 if left blank so JSON stays valid
+CITY="${CITY:-}"
+LAT="${LAT:-0}"
+LON="${LON:-0}"
 
 cat > data/settings.json << EOF
 {
