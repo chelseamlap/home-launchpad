@@ -11,22 +11,22 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #1a1a2e;
-  --bg-card: #16213e;
-  --bg-card-alt: #1c2a4a;
-  --bg-input: #0f3460;
-  --text: #e0e0e0;
-  --text-dim: #8892a4;
+  --bg: #0f1923;
+  --bg-card: #1b2838;
+  --bg-card-alt: #243447;
+  --bg-input: #1b2838;
+  --text: #f0f0f0;
+  --text-dim: #a8b8cc;
   --text-bright: #ffffff;
-  --accent: #4fc3f7;
-  --accent-dim: #29668a;
-  --green: #66bb6a;
-  --orange: #ffa726;
-  --red: #ef5350;
-  --visitor: #ce93d8;
-  --border: #2a3a5c;
+  --accent: #64d2ff;
+  --accent-dim: #3a8ab5;
+  --green: #7ecf82;
+  --orange: #ffb84d;
+  --red: #ff6b6b;
+  --visitor: #daa8e8;
+  --border: #344a64;
   --radius: 12px;
-  --row-min: 56px;
+  --row-min: 60px;
   --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
@@ -55,7 +55,7 @@ html, body {
   background: var(--bg-card);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
-  height: 56px;
+  height: 60px;
 }
 
 .tab-btn {
@@ -63,7 +63,7 @@ html, body {
   background: none;
   border: none;
   color: var(--text-dim);
-  font-size: 15px;
+  font-size: 18px;
   font-family: var(--font);
   padding: 0 8px;
   cursor: pointer;
@@ -80,7 +80,7 @@ html, body {
   background: rgba(79, 195, 247, 0.06);
 }
 .tab-btn:active { background: rgba(79,195,247,0.12); }
-.tab-icon { font-size: 20px; }
+.tab-icon { font-size: 22px; }
 
 /* Tab content area */
 .tab-content {
@@ -110,8 +110,8 @@ html, body {
   border: 1px solid var(--border);
 }
 .card-title {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--text-dim);
@@ -151,14 +151,14 @@ h2.section-title:first-child { margin-top: 0; }
   gap: 10px;
   flex-shrink: 0;
 }
-.weather-icon-big { font-size: 36px; }
-.weather-temp { font-size: 32px; font-weight: 700; color: var(--text-bright); }
-.weather-meta { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.weather-icon-big { font-size: 42px; }
+.weather-temp { font-size: 38px; font-weight: 700; color: var(--text-bright); }
+.weather-meta { font-size: 15px; color: var(--text-dim); line-height: 1.5; }
 .weather-dress {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--orange);
   margin-top: 6px;
-  line-height: 1.3;
+  line-height: 1.4;
 }
 
 .hourly-strip {
@@ -172,15 +172,15 @@ h2.section-title:first-child { margin-top: 0; }
 .hourly-item {
   flex-shrink: 0;
   text-align: center;
-  padding: 4px 6px;
+  padding: 6px 8px;
   background: var(--bg-card-alt);
   border-radius: 6px;
-  min-width: 52px;
-  font-size: 11px;
+  min-width: 60px;
+  font-size: 13px;
   color: var(--text-dim);
 }
-.hourly-item .h-temp { font-size: 14px; font-weight: 600; color: var(--text); }
-.hourly-item .h-icon { font-size: 15px; }
+.hourly-item .h-temp { font-size: 16px; font-weight: 600; color: var(--text); }
+.hourly-item .h-icon { font-size: 18px; }
 
 /* 7-day forecast (horizontal strip like hourly) */
 .daily-strip {
@@ -192,19 +192,19 @@ h2.section-title:first-child { margin-top: 0; }
 .daily-strip-item {
   flex-shrink: 0;
   text-align: center;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: var(--bg-card-alt);
   border-radius: 8px;
-  min-width: 80px;
-  font-size: 12px;
+  min-width: 90px;
+  font-size: 14px;
   color: var(--text-dim);
 }
 .daily-strip-item .d-day { font-weight: 600; color: var(--text); margin-bottom: 4px; }
-.daily-strip-item .d-icon { font-size: 20px; margin: 4px 0; }
-.daily-strip-item .d-temps { font-size: 14px; }
+.daily-strip-item .d-icon { font-size: 22px; margin: 4px 0; }
+.daily-strip-item .d-temps { font-size: 16px; }
 .daily-strip-item .d-hi { font-weight: 600; color: var(--text-bright); }
 .daily-strip-item .d-lo { color: var(--text-dim); }
-.daily-strip-item .d-rain { color: var(--accent); font-size: 11px; }
+.daily-strip-item .d-rain { color: var(--accent); font-size: 13px; }
 
 /* ============================================================
    EVENT LISTS
@@ -217,12 +217,12 @@ h2.section-title:first-child { margin-top: 0; }
   background: var(--bg-card-alt);
 }
 .event-item.has-guests { border-left-color: var(--visitor); }
-.event-time { font-size: 12px; color: var(--accent); font-weight: 600; }
-.event-summary { font-size: 15px; color: var(--text-bright); margin-top: 2px; }
-.event-location { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
-.event-guests { font-size: 11px; color: var(--visitor); margin-top: 4px; }
+.event-time { font-size: 14px; color: var(--accent); font-weight: 600; }
+.event-summary { font-size: 17px; color: var(--text-bright); margin-top: 2px; }
+.event-location { font-size: 14px; color: var(--text-dim); margin-top: 2px; }
+.event-guests { font-size: 13px; color: var(--visitor); margin-top: 4px; }
 .event-day-header {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--accent);
   padding: 10px 0 4px;
@@ -271,7 +271,7 @@ h2.section-title:first-child { margin-top: 0; }
 
 .list-text {
   flex: 1;
-  font-size: 16px;
+  font-size: 18px;
   color: var(--text);
   line-height: 1.3;
 }
@@ -316,23 +316,25 @@ h2.section-title:first-child { margin-top: 0; }
    ============================================================ */
 .intention-field {
   width: 100%;
-  min-height: 44px;
+  min-height: 48px;
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
-  font-size: 15px;
-  padding: 10px 12px;
+  font-size: 17px;
+  padding: 12px 14px;
   font-family: var(--font);
-  resize: none;
   margin-top: 6px;
+  cursor: pointer;
+  line-height: 1.4;
+  white-space: pre-wrap;
 }
-.intention-field:focus {
-  outline: none;
-  border-color: var(--accent);
+.intention-field:empty,
+.intention-field.placeholder {
+  color: var(--text-dim);
 }
 .intention-label {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--text-dim);
   font-weight: 600;
   margin-top: 10px;
@@ -876,11 +878,9 @@ h2.section-title:first-child { margin-top: 0; }
           <div class="card">
             <div class="card-title">Weekend Plans & Ideas</div>
             <div class="intention-label">Saturday</div>
-            <textarea class="intention-field" id="intention-sat" rows="2" placeholder="What's the plan?"
-                      oninput="saveIntention('sat',this.value)"></textarea>
+            <div class="intention-field" id="intention-sat" onclick="editIntention('sat')"></div>
             <div class="intention-label">Sunday</div>
-            <textarea class="intention-field" id="intention-sun" rows="2" placeholder="What's the plan?"
-                      oninput="saveIntention('sun',this.value)"></textarea>
+            <div class="intention-field" id="intention-sun" onclick="editIntention('sun')"></div>
           </div>
 
           <!-- This Week's Events -->
@@ -1380,8 +1380,8 @@ async function loadToday() {
   if (talk) renderList(talk.items, 'talk-preview', 'things_to_talk_about', {limit: 5});
 
   // Weekend intentions from localStorage
-  document.getElementById('intention-sat').value = localStorage.getItem('intention-sat') || '';
-  document.getElementById('intention-sun').value = localStorage.getItem('intention-sun') || '';
+  document.getElementById('intention-sat').textContent = localStorage.getItem('intention-sat') || 'Tap to add plans...';
+  document.getElementById('intention-sun').textContent = localStorage.getItem('intention-sun') || 'Tap to add plans...';
 }
 
 async function loadAllLists() {
@@ -1585,6 +1585,14 @@ async function refreshAll() {
    ============================================================ */
 function saveIntention(day, val) {
   localStorage.setItem('intention-' + day, val);
+  document.getElementById('intention-' + day).textContent = val || 'Tap to add plans...';
+}
+
+function editIntention(day) {
+  const current = localStorage.getItem('intention-' + day) || '';
+  openKeyboard(current, (newVal) => {
+    saveIntention(day, newVal);
+  });
 }
 
 /* ============================================================
