@@ -92,26 +92,44 @@
 
 /* Background image support */
 body.has-bg-image {
-  --card-opacity: 0.92;
+  background: transparent;
 }
-body.has-bg-image::before {
-  content: '';
+body.has-bg-image #app {
+  background: transparent;
+}
+body.has-bg-image .tab-content {
+  background: transparent;
+}
+body.has-bg-image .tab-panel {
+  background: transparent;
+}
+body.has-bg-image .tab-bar {
+  background: rgba(from var(--bg-card) r g b / 0.85);
+}
+body.has-bg-image .card,
+body.has-bg-image .list-card {
+  background: rgba(from var(--bg-card) r g b / 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.bg-layer {
+  display: none;
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: -2;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-image: var(--bg-image);
 }
-body.has-bg-image::after {
-  content: '';
+.bg-overlay {
+  display: none;
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: var(--bg);
-  opacity: 0.7;
+  opacity: 0.65;
 }
+body.has-bg-image .bg-layer { display: block; }
+body.has-bg-image .bg-overlay { display: block; background: var(--bg); }
 
 html, body {
   font-family: var(--font);
@@ -538,18 +556,25 @@ h2.section-title:first-child { margin-top: 0; }
 .week-event.has-guests { border-left-color: var(--visitor); }
 .week-event-time { font-size: 10px; color: var(--accent); }
 
-/* Calendar two-panel layout (week left, month right) */
+/* Calendar stacked layout (week top, month bottom) */
 .cal-two-panel {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
   height: 100%;
 }
-.cal-week-card { overflow-y: auto; }
-.cal-month-card { overflow-y: auto; }
+.cal-week-card { flex-shrink: 0; }
+.cal-month-card { flex: 1; overflow-y: auto; }
 .cal-two-panel .week-grid { min-height: auto; }
-.cal-two-panel .week-col { min-height: 500px; }
-.cal-two-panel .month-day { min-height: 80px; }
+.cal-two-panel .week-col { min-height: 180px; }
+.cal-two-panel .month-day { min-height: 70px; }
+
+/* Today tab lists (side by side) */
+.today-lists-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
 
 /* Lists grid */
 .lists-grid {
@@ -873,6 +898,9 @@ h2.section-title:first-child { margin-top: 0; }
 </head>
 <body>
 
+<div class="bg-layer" id="bg-layer"></div>
+<div class="bg-overlay"></div>
+
 <div id="app">
   <!-- ============================================================
        TAB BAR
@@ -920,7 +948,7 @@ h2.section-title:first-child { margin-top: 0; }
           </div>
 
           <!-- Today lists (populated dynamically from lists with show_on_today) -->
-          <div id="today-lists-container"></div>
+          <div id="today-lists-container" class="today-lists-grid"></div>
 
           <!-- Google Home + Ecobee side by side -->
           <div class="widget-pair">
@@ -999,7 +1027,7 @@ h2.section-title:first-child { margin-top: 0; }
       <h2 class="section-title">Apple Reminders</h2>
       <div class="card">
         <div style="margin-bottom:10px; color:var(--text-dim); font-size:0.95rem;">
-          Toggle which Reminders lists appear on the dashboard. Lists marked with a star show on the Today tab.
+          Choose which Reminders lists appear on each tab.
         </div>
         <div id="reminders-list-picker" class="loading">Discovering lists...</div>
         <div style="display:flex; gap:10px; margin-top:12px;">
@@ -1513,31 +1541,50 @@ async function discoverLists() {
   const picker = document.getElementById('reminders-list-picker');
   picker.innerHTML = '<span class="loading">Discovering lists...</span>';
   const available = await api('/api/reminders/discover');
-  if (!available) {
-    picker.innerHTML = '<div class="empty-state">Could not discover lists. Check Apple Reminders access.</div>';
+  if (!available || !available.length) {
+    // Fall back to showing configured lists if discovery returns nothing
+    const configured = await getListsConfig();
+    if (configured && configured.length) {
+      _discoveredLists = configured.map(l => ({name: l.name, count: '?', enabled: true}));
+      renderListPicker(_discoveredLists, configured);
+    } else {
+      picker.innerHTML = '<div class="empty-state">No lists found. Check Apple Reminders access or add lists from your phone.</div>';
+    }
     return;
   }
   _discoveredLists = available;
   const configured = await getListsConfig();
+  renderListPicker(available, configured);
+}
+
+function renderListPicker(available, configured) {
+  const picker = document.getElementById('reminders-list-picker');
   const configMap = {};
   configured.forEach(l => { configMap[l.name] = l; });
 
-  picker.innerHTML = available.map(l => {
-    const enabled = l.enabled;
+  let html = `
+    <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:4px 16px; align-items:center; padding:6px 0;">
+      <div style="font-weight:700; font-size:0.85rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px;">List Name</div>
+      <div style="font-weight:700; font-size:0.85rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; text-align:center;">Lists Tab</div>
+      <div style="font-weight:700; font-size:0.85rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; text-align:center;">Today Tab</div>
+    </div>`;
+
+  available.forEach(l => {
+    const enabled = l.enabled || !!configMap[l.name];
     const showOnToday = configMap[l.name] ? configMap[l.name].show_on_today : false;
-    return `
-      <div class="settings-row" style="align-items:center;">
-        <label style="display:flex; align-items:center; gap:8px; flex:1; cursor:pointer;">
-          <input type="checkbox" class="list-toggle" data-name="${escAttr(l.name)}" ${enabled ? 'checked' : ''}>
-          <span style="font-size:1.05rem;">${escHTML(l.name)}</span>
-          <span style="color:var(--text-dim); font-size:0.85rem;">(${l.count} items)</span>
+    html += `
+      <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:4px 16px; align-items:center; min-height:44px; border-top:1px solid var(--border);">
+        <div style="font-size:1.05rem;">${escHTML(l.name)} <span style="color:var(--text-dim); font-size:0.85rem;">(${l.count})</span></div>
+        <label style="display:flex; justify-content:center; cursor:pointer;">
+          <input type="checkbox" class="list-toggle" data-name="${escAttr(l.name)}" ${enabled ? 'checked' : ''} style="width:20px; height:20px;">
         </label>
-        <label style="display:flex; align-items:center; gap:4px; cursor:pointer; color:var(--orange);" title="Show on Today tab">
-          <input type="checkbox" class="list-today-toggle" data-name="${escAttr(l.name)}" ${showOnToday ? 'checked' : ''}>
-          &#9733;
+        <label style="display:flex; justify-content:center; cursor:pointer;">
+          <input type="checkbox" class="list-today-toggle" data-name="${escAttr(l.name)}" ${showOnToday ? 'checked' : ''} style="width:20px; height:20px;">
         </label>
       </div>`;
-  }).join('');
+  });
+
+  picker.innerHTML = html;
 }
 
 async function saveListConfig() {
@@ -1731,13 +1778,14 @@ function applyTheme(theme) {
 }
 
 function applyBackground(url) {
+  const bgLayer = document.getElementById('bg-layer');
   if (url) {
-    document.body.style.setProperty('--bg-image', `url('${url}')`);
+    bgLayer.style.backgroundImage = `url('${url}')`;
     document.body.classList.add('has-bg-image');
     document.getElementById('bg-preview-row').style.display = '';
     document.getElementById('bg-preview-thumb').src = url;
   } else {
-    document.body.style.removeProperty('--bg-image');
+    bgLayer.style.backgroundImage = '';
     document.body.classList.remove('has-bg-image');
     document.getElementById('bg-preview-row').style.display = 'none';
     document.getElementById('bg-preview-thumb').src = '';
