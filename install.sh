@@ -149,51 +149,55 @@ if [[ "$AUTO_CHROME" == "y" ]]; then
     else
         CHROMIUM_BIN="chromium"
     fi
-    CHROME_CMD="$CHROMIUM_BIN --start-maximized --noerrdialogs --disable-infobars --app=http://localhost:5000"
+    CHROME_CMD="$CHROMIUM_BIN --kiosk --noerrdialogs --disable-infobars --disable-session-crashed-bubble --disable-restore-session-state --app=http://localhost:5000"
     # Wait-for-port script: waits up to 30s for the dashboard to be ready
     WAIT_CMD="for i in \$(seq 1 30); do curl -s http://localhost:5000 >/dev/null 2>&1 && break; sleep 1; done"
-    INSTALLED=false
 
-    # Method 1: XDG autostart (works on most desktop environments)
-    XDG_DIR="$HOME/.config/autostart"
-    mkdir -p "$XDG_DIR"
-    cat > "$XDG_DIR/home-launchpad.desktop" << EOF
+    # Clean up any old autostart entries to prevent multiple launches
+    echo "→ Cleaning up old autostart entries..."
+    rm -f "$HOME/.config/autostart/home-launchpad.desktop" 2>/dev/null
+    rm -f "$HOME/.config/autostart/family-dashboard.desktop" 2>/dev/null
+    LXDE_DIR="$HOME/.config/lxsession/LXDE-pi"
+    if [ -f "$LXDE_DIR/autostart" ]; then
+        sed -i '/home-launchpad/d' "$LXDE_DIR/autostart" 2>/dev/null
+        sed -i '/family-dashboard/d' "$LXDE_DIR/autostart" 2>/dev/null
+    fi
+    WAYFIRE_INI="$HOME/.config/wayfire.ini"
+    if [ -f "$WAYFIRE_INI" ]; then
+        sed -i '/home-launchpad/d' "$WAYFIRE_INI" 2>/dev/null
+        sed -i '/family-dashboard/d' "$WAYFIRE_INI" 2>/dev/null
+    fi
+
+    # Detect which desktop environment is active and use ONLY that one
+    if [ -f "$WAYFIRE_INI" ] && pgrep -x wayfire &>/dev/null; then
+        # Wayfire (Raspberry Pi OS Bookworm+ default)
+        if grep -q "\[autostart\]" "$WAYFIRE_INI"; then
+            sed -i "/\[autostart\]/a home-launchpad = bash -c '$WAIT_CMD && $CHROME_CMD'" "$WAYFIRE_INI"
+        else
+            echo -e "\n[autostart]\nhome-launchpad = bash -c '$WAIT_CMD && $CHROME_CMD'" >> "$WAYFIRE_INI"
+        fi
+        echo "✓ Wayfire autostart configured (Bookworm+)"
+    elif [ -d "$LXDE_DIR" ]; then
+        # LXDE (older Pi OS)
+        echo "@bash -c '$WAIT_CMD && $CHROME_CMD'" >> "$LXDE_DIR/autostart"
+        echo "✓ LXDE autostart configured"
+    else
+        # Fallback: XDG autostart
+        XDG_DIR="$HOME/.config/autostart"
+        mkdir -p "$XDG_DIR"
+        cat > "$XDG_DIR/home-launchpad.desktop" << EOF
 [Desktop Entry]
 Type=Application
 Name=The Home Launchpad
-Comment=Launch dashboard in Chrome after server is ready
+Comment=Launch dashboard in Chrome kiosk mode
 Exec=bash -c '$WAIT_CMD && $CHROME_CMD'
 X-GNOME-Autostart-enabled=true
 EOF
-    echo "✓ XDG autostart entry created ($XDG_DIR/home-launchpad.desktop)"
-    INSTALLED=true
-
-    # Method 2: LXDE (older Raspberry Pi OS)
-    LXDE_DIR="$HOME/.config/lxsession/LXDE-pi"
-    if [ -d "$LXDE_DIR" ]; then
-        if ! grep -q "home-launchpad" "$LXDE_DIR/autostart" 2>/dev/null; then
-            echo "@bash -c '$WAIT_CMD && $CHROME_CMD'" >> "$LXDE_DIR/autostart"
-            echo "✓ LXDE autostart entry added"
-        fi
+        echo "✓ XDG autostart configured"
     fi
 
-    # Method 3: Wayfire (Raspberry Pi OS Bookworm+)
-    WAYFIRE_INI="$HOME/.config/wayfire.ini"
-    if [ -f "$WAYFIRE_INI" ]; then
-        if ! grep -q "home-launchpad" "$WAYFIRE_INI" 2>/dev/null; then
-            # Add to [autostart] section
-            if grep -q "\[autostart\]" "$WAYFIRE_INI"; then
-                sed -i "/\[autostart\]/a home-launchpad = bash -c '$WAIT_CMD && $CHROME_CMD'" "$WAYFIRE_INI"
-            else
-                echo -e "\n[autostart]\nhome-launchpad = bash -c '$WAIT_CMD && $CHROME_CMD'" >> "$WAYFIRE_INI"
-            fi
-            echo "✓ Wayfire autostart entry added"
-        fi
-    fi
-
-    if [ "$INSTALLED" = true ]; then
-        echo "→ Chrome will auto-launch once the dashboard server is ready (up to 30s)"
-    fi
+    echo "→ Chrome will open in full-screen kiosk mode once the server is ready"
+    echo "  (Press Alt+F4 to exit kiosk mode if needed)"
 fi
 
 # --- Done ---

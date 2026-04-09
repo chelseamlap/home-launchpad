@@ -131,13 +131,13 @@ python3 app.py
 
 The server starts on port 5000 by default.
 
-### 9. Launch Chrome in Soft Kiosk Mode
+### 9. Launch Chrome in Kiosk Mode
 
 ```bash
-chromium-browser --start-maximized --app=http://localhost:5000
+chromium --kiosk --noerrdialogs --disable-infobars --app=http://localhost:5000
 ```
 
-This opens Chrome in "app mode" — no address bar, no tabs — but the user can still Alt+F4 or switch windows.
+This opens Chrome in true full-screen kiosk mode — no title bar, no address bar, no OS menu bar. Press **Alt+F4** to exit if needed.
 
 ### 10. Auto-Start on Boot (Optional)
 
