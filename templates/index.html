@@ -1107,6 +1107,7 @@ h2.section-title:first-child { margin-top: 0; }
         <div style="display:flex; gap:10px; margin-top:12px;">
           <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
           <button class="btn btn-outline" onclick="refreshAll()">Refresh All Data</button>
+          <button class="btn btn-outline" onclick="exitKiosk()" style="margin-left:auto; opacity:0.6;">Exit Kiosk</button>
         </div>
       </div>
     </div>
@@ -1895,6 +1896,12 @@ async function refreshAll() {
   await api('/api/refresh', {method: 'POST'});
   loadToday();
   showToast('All data refreshed');
+}
+
+async function exitKiosk() {
+  if (confirm('This will close Chrome so you can access the desktop. Reopen with:\nchromium --kiosk --app=http://localhost:5000')) {
+    await api('/api/exit-kiosk', {method: 'POST'});
+  }
 }
 
 /* ============================================================

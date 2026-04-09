@@ -285,6 +285,14 @@ def serve_data_file(filename):
     return send_from_directory(config.DATA_DIR, filename)
 
 
+@app.route("/api/exit-kiosk", methods=["POST"])
+def api_exit_kiosk():
+    """Kill Chromium to exit kiosk mode, giving access to the desktop."""
+    import subprocess as sp
+    sp.Popen(["pkill", "-f", "chromium"])
+    return jsonify({"ok": True})
+
+
 @app.route("/api/refresh", methods=["POST"])
 def api_refresh_all():
     """Manual refresh trigger — resets chores and returns status."""
