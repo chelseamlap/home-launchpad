@@ -206,7 +206,13 @@ def api_refresh_all():
 # ============================================================
 
 if __name__ == "__main__":
+    import threading
+    import webbrowser
+
     port = config.PORT
-    logger.info(f"Starting Family Dashboard on port {port}")
-    logger.info(f"Open Chrome: --start-maximized --app=http://localhost:{port}")
+    logger.info(f"Starting The Home Launchpad on port {port}")
+
+    # Open browser after a short delay to let Flask start
+    threading.Timer(1.5, webbrowser.open, args=[f"http://localhost:{port}"]).start()
+
     app.run(host="0.0.0.0", port=port, debug=False)
