@@ -6,7 +6,7 @@ A touch-optimized family command center for a 24" Dell touchscreen on a Raspberr
 
 - **Backend**: Python/Flask on the Pi, serves localhost
 - **Frontend**: Single-page HTML/CSS/JS, dark mode, 1920x1080 landscape
-- **Lists**: Apple Reminders via iCloud (pyicloud), with local JSON fallback
+- **Lists**: Apple Reminders — native macOS (JXA) or CalDAV (Pi), with local JSON fallback
 - **Calendar**: Google Calendar API via OAuth2
 - **Budget**: Google Sheets API via OAuth2
 - **Weather**: Open-Meteo (free, no API key)
@@ -34,43 +34,26 @@ cd /home/pi/family-dashboard
 pip install -r requirements.txt --break-system-packages
 ```
 
-### 2. Create Apple Reminders Lists
+### 2. Set Up Apple Reminders (CalDAV)
 
-On your iPhone or Mac, open Reminders and create these 5 lists (exact names matter):
+On the Raspberry Pi, the dashboard connects to Apple Reminders via iCloud's CalDAV protocol. This gives full read/write access to your Reminders lists.
 
-1. **Daily Chores**
-2. **Weekly Chores**
-3. **Things to Talk About**
-4. **Home Projects**
-5. **Vacation Planning**
+1. **Generate an app-specific password** at https://appleid.apple.com → Sign-In and Security → App-Specific Passwords
 
-Add your initial items to each list.
+2. **Create the credentials file** `data/icloud_creds.json`:
 
-### 3. Set Up Apple Reminders iCloud Bridge
+   ```json
+   {
+     "apple_id": "you@icloud.com",
+     "password": "xxxx-xxxx-xxxx-xxxx"
+   }
+   ```
 
-The dashboard uses `pyicloud` to access Apple Reminders via iCloud.
+3. **Choose which lists to display** from the Home tab → Apple Reminders section. The dashboard auto-discovers all lists available to the configured Apple ID.
 
-```bash
-pip install pyicloud --break-system-packages
-```
+If CalDAV isn't configured, the dashboard falls back to local JSON files in `data/`. You can manage everything from the touchscreen — you just won't get sync with your phones.
 
-**First-time authentication:**
-
-```bash
-cd /home/pi/family-dashboard
-python3 -c "
-from pyicloud import PyiCloudService
-api = PyiCloudService('YOUR_APPLE_ID@icloud.com', 'YOUR_PASSWORD')
-if api.requires_2fa:
-    code = input('Enter 2FA code sent to your device: ')
-    api.validate_2fa_code(code)
-    print('Authenticated!')
-"
-```
-
-Your session is cached in `~/.pyicloud` — you won't need to re-authenticate unless the session expires.
-
-**If pyicloud doesn't work on your Pi**, the dashboard falls back to local JSON files in the `data/` folder. You can manage everything from the touchscreen and it works perfectly — you just won't get automatic sync with your phones. This is the recommended starting point.
+> **Note on shared lists**: Each Apple ID can only see its own lists and lists explicitly shared *to* it. If both household members have Reminders lists you want on the dashboard, you'll need to configure both Apple IDs. Multi-account support is planned — for now, configure the account that owns the most lists you want to display, and have the other person share their lists to that account.
 
 ### 4. Set Up Google OAuth2
 
@@ -247,86 +230,53 @@ pip install -r requirements.txt --break-system-packages
 
 ---
 
-## Apple Reminders Sync
+## Apple Reminders Integration
 
-The dashboard supports two modes for lists: **iCloud sync** (two-way with Apple Reminders on your iPhone/Mac) and **local-only** (JSON files on the Pi). Local-only is the default and works out of the box.
+The dashboard connects to Apple Reminders with three backends, chosen automatically:
 
-### Local-Only Mode (Default)
+| Platform | Backend | Setup Required |
+|---|---|---|
+| **macOS** (development) | Native JXA via osascript | None — reads the Reminders app directly |
+| **Raspberry Pi / Linux** | CalDAV via iCloud | App-specific password in `data/icloud_creds.json` |
+| **Fallback** | Local JSON files | None — works offline, no sync |
 
-Lists are stored as JSON files in `data/reminders_*.json`. You can add, check off, edit, and delete items directly from the touchscreen. This is reliable and has zero external dependencies. The tradeoff is that changes on the dashboard don't sync to your phone and vice versa.
+### Configuring Lists
 
-### iCloud Sync Mode
+Lists are configured from the **Home tab → Apple Reminders** section:
 
-To enable two-way sync with Apple Reminders:
+1. The dashboard auto-discovers all available lists from your Apple account
+2. Toggle which lists to display on the dashboard
+3. Star lists to show them on the Today tab
+4. Hit "Save List Selection" — config is stored in `data/settings.json`
 
-1. **Install pyicloud:**
+You can also edit `data/settings.json` directly:
 
-   ```bash
-   pip install pyicloud --break-system-packages
-   ```
-
-2. **Authenticate with iCloud:**
-
-   ```bash
-   cd /home/pi/family-dashboard
-   python3 -c "
-   from pyicloud import PyiCloudService
-   api = PyiCloudService('YOUR_APPLE_ID@icloud.com', 'YOUR_PASSWORD')
-   if api.requires_2fa:
-       code = input('Enter 2FA code sent to your device: ')
-       api.validate_2fa_code(code)
-       print('Authenticated!')
-   "
-   ```
-
-3. **Create matching lists in Apple Reminders** (exact names):
-   - Daily Chores
-   - Weekly Chores
-   - Things to Talk About
-   - Home Projects
-   - Vacation Planning
-
-4. **Store credentials** (so the dashboard can reconnect automatically):
-
-   Create `data/icloud_creds.json`:
-   ```json
-   {
-     "apple_id": "YOUR_APPLE_ID@icloud.com",
-     "password": "YOUR_APP_SPECIFIC_PASSWORD"
-   }
-   ```
-
-   Use an [app-specific password](https://support.apple.com/en-us/102654) rather than your main Apple ID password.
+```json
+{
+  "reminders_lists": [
+    {"key": "weekday_morning", "name": "Weekday morning", "show_on_today": true},
+    {"key": "things_to_talk_about", "name": "Things to Talk About", "show_on_today": true},
+    {"key": "vacation_planning", "name": "Vacation Planning", "show_on_today": false}
+  ]
+}
+```
 
 ### How Sync Works
 
-- On each page load or 5-minute refresh, the dashboard pulls the latest items from iCloud and saves them locally as a backup
-- Items added on the touchscreen are pushed to iCloud immediately and also saved locally
-- If iCloud is unreachable (network issues, session expired), the dashboard falls back to the local JSON files seamlessly
-- Completions and deletions made on the touchscreen currently only update the local copy (iCloud write-back for these is a future improvement)
+- All operations (add, complete, delete, edit) go directly to Apple Reminders and sync via iCloud to all your devices
+- If the remote backend is unreachable, operations fall back to local JSON files
+- The dashboard refreshes data every 5 minutes
 
-### Re-authenticating
+### Known Limitations
 
-iCloud sessions expire periodically. When that happens the dashboard quietly falls back to local data. To re-authenticate:
-
-```bash
-cd /home/pi/family-dashboard
-python3 -c "
-from pyicloud import PyiCloudService
-api = PyiCloudService('YOUR_APPLE_ID@icloud.com', 'YOUR_PASSWORD')
-if api.requires_2fa:
-    code = input('Enter 2FA code: ')
-    api.validate_2fa_code(code)
-print('Re-authenticated!')
-"
-```
-
-Then restart the dashboard service.
+- **Shared lists visibility**: On macOS, the JXA scripting API only sees lists owned by or explicitly shared *to* the logged-in user. Lists shared from another family member's account may not appear in auto-discovery. On CalDAV (Pi), only lists accessible to the configured Apple ID are visible.
+- **Multi-account**: The dashboard currently supports one Apple ID at a time. If both household members have lists they want on the dashboard, the workaround is to share those lists to one account. Multi-account CalDAV support (configuring multiple Apple IDs) is planned for a future update.
 
 ---
 
 ## Planned Integrations
 
+- **Multi-account Apple Reminders**: Support multiple Apple IDs so both household members' lists appear on the dashboard
 - **Google Home / Chromecast**: Show "Now Playing" track info from Google Home speakers
 - **Ecobee Thermostat**: Display current temperature, set point, and HVAC mode
 
@@ -339,7 +289,7 @@ family-dashboard/
 ├── app.py                  # Flask server + API routes
 ├── config.py               # Configuration & settings
 ├── weather.py              # Open-Meteo weather API
-├── reminders_bridge.py     # Apple Reminders iCloud bridge
+├── reminders_bridge.py     # Apple Reminders bridge (JXA / CalDAV / local JSON)
 ├── google_auth.py          # Google OAuth2 handler
 ├── google_calendar.py      # Google Calendar API
 ├── google_sheets.py        # Google Sheets API (budget)
