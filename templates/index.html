@@ -985,13 +985,6 @@ h2.section-title:first-child { margin-top: 0; }
             <div class="card-title">This Week</div>
             <div id="week-events" class="loading">Loading...</div>
           </div>
-
-          <!-- Talk About Preview -->
-          <div class="card">
-            <div class="card-title">Things to Talk About</div>
-            <div id="talk-preview"></div>
-            <span class="see-all" onclick="switchTab('lists')">See all &rarr;</span>
-          </div>
         </div>
       </div>
     </div>
@@ -1478,10 +1471,6 @@ async function reloadList(listKey) {
   // Update in Today tab
   const todayEl = document.getElementById('today-' + listKey);
   if (todayEl) renderList(data.items, 'today-' + listKey, listKey);
-  // Talk preview
-  if (listKey === 'things_to_talk_about') {
-    renderList(data.items, 'talk-preview', listKey, {limit: 5});
-  }
 }
 
 /* ============================================================
@@ -1507,7 +1496,6 @@ async function loadToday() {
     api('/api/calendar/week'),
     api('/api/settings'),
     ...todayLists.map(l => api(`/api/reminders/${l.key}`)),
-    api('/api/reminders/things_to_talk_about'),
   ];
   const results = await Promise.all(fetches);
 
@@ -1515,8 +1503,7 @@ async function loadToday() {
   const todayEvents = results[1];
   const weekEvents = results[2];
   const weekendSettings = results[3];
-  const listResults = results.slice(4, 4 + todayLists.length);
-  const talk = results[results.length - 1];
+  const listResults = results.slice(4);
 
   renderWeatherCurrent(weather);
   renderEvents(todayEvents, 'today-events', false);
@@ -1525,8 +1512,6 @@ async function loadToday() {
   todayLists.forEach((l, i) => {
     if (listResults[i]) renderList(listResults[i].items, 'today-' + l.key, l.key);
   });
-
-  if (talk) renderList(talk.items, 'talk-preview', 'things_to_talk_about', {limit: 5});
 
   if (weekendSettings) {
     document.getElementById('intention-sat').textContent = weekendSettings.weekend_sat || 'Tap to add plans...';

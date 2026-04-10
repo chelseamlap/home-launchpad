@@ -20,15 +20,12 @@ GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets.readonly",
 ]
 
-# --- Apple Reminders Lists ---
-# Default lists — overridden by "reminders_lists" in data/settings.json.
-# Each entry: { "key": "url_safe_slug", "name": "Exact Apple Reminders Name",
-#                "show_on_today": true/false }
-DEFAULT_REMINDERS_LISTS = [
-    {"key": "weekday_morning", "name": "Weekday morning", "show_on_today": True},
-    {"key": "things_to_talk_about", "name": "Things to Talk About", "show_on_today": True},
-    {"key": "vacation_planning", "name": "Vacation Planning", "show_on_today": False},
-]
+# --- Reminders Lists ---
+# Populated by the user via Home > Settings, stored in data/settings.json
+# under "reminders_lists". Each entry:
+#   { "key": "url_safe_slug", "name": "Exact Project Name",
+#     "show_on_today": true/false }
+DEFAULT_REMINDERS_LISTS = []
 
 # --- Google Sheets (Money tab) ---
 BUDGET_SHEET_ID = os.environ.get("BUDGET_SHEET_ID", "")
