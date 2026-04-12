@@ -319,6 +319,10 @@ def api_refresh_all():
     """Manual refresh trigger — resets chores and returns status."""
     reset_daily_chores()
     reset_weekly_chores()
+    # Clear calendar color cache so new calendars pick up their colors
+    from server.google_calendar import _cal_color_cache
+    import server.google_calendar as gcal
+    gcal._cal_color_cache = None
     return jsonify({"ok": True, "timestamp": datetime.now().isoformat()})
 
 

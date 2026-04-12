@@ -50,12 +50,39 @@ def discover_calendars():
         return []
 
 
+def _get_calendar_colors():
+    """Build a map of calendar ID → background color from the API."""
+    service = _get_service()
+    if not service:
+        return {}
+    try:
+        result = service.calendarList().list().execute()
+        return {
+            cal["id"]: cal.get("backgroundColor", "")
+            for cal in result.get("items", [])
+        }
+    except Exception:
+        return {}
+
+
+# Cache calendar colors for the lifetime of the process
+_cal_color_cache = None
+
+
+def _get_color_map():
+    global _cal_color_cache
+    if _cal_color_cache is None:
+        _cal_color_cache = _get_calendar_colors()
+    return _cal_color_cache
+
+
 def _fetch_events_multi(calendar_ids, time_min, time_max, max_per_cal=100):
     """Fetch events from multiple calendars and merge them."""
     service = _get_service()
     if not service:
         return []
 
+    color_map = _get_color_map()
     all_events = []
     for cal_id in calendar_ids:
         try:
@@ -67,7 +94,11 @@ def _fetch_events_multi(calendar_ids, time_min, time_max, max_per_cal=100):
                 orderBy="startTime",
                 maxResults=max_per_cal,
             ).execute()
-            all_events.extend([_parse_event(e) for e in result.get("items", [])])
+            cal_color = color_map.get(cal_id, "")
+            for item in result.get("items", []):
+                ev = _parse_event(item)
+                ev["calendar_color"] = cal_color
+                all_events.append(ev)
         except Exception as e:
             logger.error(f"Calendar fetch failed for {cal_id}: {e}")
 
