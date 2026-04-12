@@ -1325,7 +1325,7 @@ function renderEvents(events, containerId, grouped) {
   if (grouped) {
     const byDay = {};
     events.forEach(e => {
-      const key = e.day_name + ', ' + new Date(e.start).toLocaleDateString();
+      const key = e.day_name + ', ' + new Date(e.start).toLocaleDateString('en-US');
       if (!byDay[key]) byDay[key] = [];
       byDay[key].push(e);
     });
@@ -1730,11 +1730,16 @@ async function loadMoney() {
 /* ============================================================
    CALENDAR VIEWS
    ============================================================ */
+function localISO(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function renderWeekView(events) {
   const el = document.getElementById('cal-week');
   const now = new Date();
   const monday = new Date(now);
-  monday.setDate(now.getDate() - now.getDay() + 1);
+  const dow = now.getDay();
+  monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
 
   const days = [];
   for (let i = 0; i < 7; i++) {
@@ -1743,11 +1748,11 @@ function renderWeekView(events) {
     days.push(d);
   }
 
-  const today = now.toISOString().split('T')[0];
+  const today = localISO(now);
 
   let html = '<div class="week-grid">';
   days.forEach(d => {
-    const iso = d.toISOString().split('T')[0];
+    const iso = localISO(d);
     const isToday = iso === today;
     const dayEvents = (events || []).filter(e => e.date === iso);
     html += `<div class="week-col${isToday ? ' today' : ''}">
@@ -1777,9 +1782,9 @@ async function renderMonthView(direction) {
 
   const firstDay = new Date(year, month - 1, 1);
   const lastDay = new Date(year, month, 0);
-  const startWeekday = firstDay.getDay() || 7; // Monday = 1
+  const startWeekday = firstDay.getDay() || 7;
   const daysInMonth = lastDay.getDate();
-  const today = new Date().toISOString().split('T')[0];
+  const today = localISO(new Date());
 
   let html = `<div class="month-nav">
     <button class="month-nav-btn" onclick="renderMonthView('prev')">&lsaquo;</button>
@@ -1793,7 +1798,7 @@ async function renderMonthView(direction) {
   });
 
   // Empty cells before first day
-  const offset = startWeekday === 0 ? 6 : startWeekday - 1;
+  const offset = startWeekday - 1;
   for (let i = 0; i < offset; i++) html += '<div class="month-day empty"></div>';
 
   for (let d = 1; d <= daysInMonth; d++) {
@@ -1957,12 +1962,16 @@ function showUndo(message, undoFn) {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.innerHTML = `<span>${escHTML(message)}</span><button class="toast-undo" onclick="this.undoFn()">Undo</button>`;
-  toast.querySelector('.toast-undo').undoFn = () => {
-    undoFn();
-    toast.classList.add('hiding');
-    setTimeout(() => toast.remove(), 300);
-  };
+  if (undoFn) {
+    toast.innerHTML = `<span>${escHTML(message)}</span><button class="toast-undo" onclick="this.undoFn()">Undo</button>`;
+    toast.querySelector('.toast-undo').undoFn = () => {
+      undoFn();
+      toast.classList.add('hiding');
+      setTimeout(() => toast.remove(), 300);
+    };
+  } else {
+    toast.innerHTML = `<span>${escHTML(message)}</span>`;
+  }
   container.appendChild(toast);
   setTimeout(() => {
     if (toast.parentNode) {
@@ -2085,7 +2094,7 @@ function updateKbKeys() {
    HELPERS
    ============================================================ */
 function escHTML(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-function escAttr(s) { return (s||'').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+function escAttr(s) { return (s||'').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 /* ============================================================
    INIT & AUTO-REFRESH

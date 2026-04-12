@@ -1,11 +1,16 @@
 """Google Calendar API integration."""
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from googleapiclient.discovery import build
 from server.google_auth import get_credentials
 import config
 
 logger = logging.getLogger(__name__)
+
+
+def _local_rfc3339(dt):
+    """Convert a naive local datetime to RFC 3339 with UTC offset for Google Calendar API."""
+    return dt.astimezone().isoformat()
 
 
 def _get_service():
@@ -126,9 +131,7 @@ def get_today_events():
     now = datetime.now()
     start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
     end_of_day = start_of_day + timedelta(days=1)
-    t_min = start_of_day.isoformat() + "Z"
-    t_max = end_of_day.isoformat() + "Z"
-    return _fetch_events_multi(_get_calendar_ids(), t_min, t_max, max_per_cal=50)
+    return _fetch_events_multi(_get_calendar_ids(), _local_rfc3339(start_of_day), _local_rfc3339(end_of_day), max_per_cal=50)
 
 
 def get_week_events():
@@ -137,14 +140,14 @@ def get_week_events():
     monday = now - timedelta(days=now.weekday())
     monday = monday.replace(hour=0, minute=0, second=0, microsecond=0)
     sunday = monday + timedelta(days=7)
-    return _fetch_events_multi(_get_calendar_ids(), monday.isoformat() + "Z", sunday.isoformat() + "Z")
+    return _fetch_events_multi(_get_calendar_ids(), _local_rfc3339(monday), _local_rfc3339(sunday))
 
 
 def get_upcoming_events(days=30):
     """Get all upcoming events for the next N days."""
     now = datetime.now()
     end = now + timedelta(days=days)
-    return _fetch_events_multi(_get_calendar_ids(), now.isoformat() + "Z", end.isoformat() + "Z", max_per_cal=250)
+    return _fetch_events_multi(_get_calendar_ids(), _local_rfc3339(now), _local_rfc3339(end), max_per_cal=250)
 
 
 def get_month_events(year, month):
@@ -154,4 +157,4 @@ def get_month_events(year, month):
         end = datetime(year + 1, 1, 1)
     else:
         end = datetime(year, month + 1, 1)
-    return _fetch_events_multi(_get_calendar_ids(), start.isoformat() + "Z", end.isoformat() + "Z", max_per_cal=300)
+    return _fetch_events_multi(_get_calendar_ids(), _local_rfc3339(start), _local_rfc3339(end), max_per_cal=300)
