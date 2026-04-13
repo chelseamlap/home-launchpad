@@ -31,7 +31,7 @@
   --visitor: #daa8e8;
   --border: #344a64;
   --radius: 12px;
-  --row-min: 60px;
+  --row-min: 44px;
   --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --card-opacity: 1;
   --kb-bg: #2a2a3e;
@@ -447,15 +447,15 @@ h2.section-title:first-child { margin-top: 0; }
   display: flex;
   align-items: center;
   min-height: var(--row-min);
-  padding: 8px 14px;
+  padding: 4px 10px;
   background: var(--bg-card-alt);
-  border-radius: 8px;
-  margin-bottom: 6px;
+  border-radius: 6px;
+  margin-bottom: 4px;
   cursor: pointer;
   transition: background 0.15s;
   user-select: none;
   -webkit-user-select: none;
-  gap: 12px;
+  gap: 8px;
 }
 .list-row:active { background: rgba(79,195,247,0.1); }
 .list-row.completed { opacity: 0.45; }
@@ -463,8 +463,8 @@ h2.section-title:first-child { margin-top: 0; }
 .list-row.fading { opacity: 0; transition: opacity 0.4s; }
 
 .list-check {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: 2px solid var(--accent-dim);
   flex-shrink: 0;
@@ -481,7 +481,7 @@ h2.section-title:first-child { margin-top: 0; }
 
 .list-text {
   flex: 1;
-  font-size: 18px;
+  font-size: 15px;
   color: var(--text);
   line-height: 1.3;
 }
