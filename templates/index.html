@@ -344,11 +344,24 @@ h2.section-title:first-child { margin-top: 0; }
 }
 
 /* ============================================================
-   WEATHER — 3-column: current | hourly | 7-day
+   WEATHER + NOTES — side by side row
+   ============================================================ */
+.weather-notes-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+}
+.weather-notes-row .msg-card {
+  min-height: 0;
+}
+
+/* ============================================================
+   WEATHER — vertical stack: current | hourly | 7-day
    ============================================================ */
 .weather-card {
   display: grid;
-  grid-template-columns: auto auto 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
   align-items: start;
 }
@@ -365,9 +378,9 @@ h2.section-title:first-child { margin-top: 0; }
 
 /* Col 2: Hourly as rows */
 .weather-hourly-col {
-  border-left: 1px solid var(--border);
-  border-right: 1px solid var(--border);
-  padding: 0 10px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 0;
 }
 .hourly-row {
   display: flex;
@@ -1104,20 +1117,21 @@ h2.section-title:first-child { margin-top: 0; }
       <div class="two-col">
         <!-- LEFT: TODAY -->
         <div class="col" id="today-left">
-          <!-- Weather: 3-column -->
-          <div class="card weather-card" id="weather-current-card">
-            <div id="weather-current" class="loading">Loading...</div>
-            <div id="hourly-forecast" class="weather-hourly-col"></div>
-            <div id="daily-forecast" class="weather-daily-col"></div>
-          </div>
-
-          <!-- Message Board -->
-          <div class="card msg-card">
-            <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
-              <span>Notes</span>
-              <button class="msg-add-btn" onclick="addMessage()">+</button>
+          <!-- Weather + Notes side by side -->
+          <div class="weather-notes-row">
+            <div class="card weather-card" id="weather-current-card">
+              <div id="weather-current" class="loading">Loading...</div>
+              <div id="hourly-forecast" class="weather-hourly-col"></div>
+              <div id="daily-forecast" class="weather-daily-col"></div>
             </div>
-            <div id="message-board"><div class="empty-state">No messages</div></div>
+
+            <div class="card msg-card">
+              <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                <span>Notes</span>
+                <button class="msg-add-btn" onclick="addMessage()">+</button>
+              </div>
+              <div id="message-board"><div class="empty-state">No messages</div></div>
+            </div>
           </div>
 
           <!-- Today lists (populated dynamically from lists with show_on_today) -->
