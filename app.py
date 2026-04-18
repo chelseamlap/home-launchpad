@@ -373,6 +373,58 @@ def api_delete_message(msg_id):
     return jsonify({"ok": True})
 
 
+@app.route("/api/health")
+def api_health():
+    """Diagnostic endpoint — visit localhost:5000/api/health from Pi browser."""
+    import requests as req
+    checks = {}
+
+    # 1. Internet connectivity
+    try:
+        r = req.get("https://api.open-meteo.com/v1/forecast?latitude=0&longitude=0&current=temperature_2m", timeout=5)
+        r.raise_for_status()
+        checks["internet"] = {"ok": True}
+    except Exception as e:
+        checks["internet"] = {"ok": False, "error": str(e)}
+
+    # 2. Google OAuth token
+    from server.google_auth import get_credentials
+    creds = get_credentials()
+    if creds and creds.valid:
+        checks["google_auth"] = {"ok": True, "expiry": str(creds.expiry) if creds.expiry else "unknown"}
+    elif creds and creds.expired:
+        checks["google_auth"] = {"ok": False, "error": "Token expired — re-run setup_google_oauth.py"}
+    else:
+        checks["google_auth"] = {"ok": False, "error": "No valid token found"}
+
+    # 3. Weather
+    settings = config.load_settings()
+    w = fetch_weather(settings["latitude"], settings["longitude"])
+    if w.get("error"):
+        checks["weather"] = {"ok": False, "error": w["error"]}
+    else:
+        checks["weather"] = {"ok": True, "temp": w.get("current", {}).get("temp")}
+
+    # 4. Google Calendar
+    try:
+        events = get_today_events()
+        checks["calendar"] = {"ok": True, "event_count": len(events) if events else 0}
+    except Exception as e:
+        checks["calendar"] = {"ok": False, "error": str(e)}
+
+    # 5. Settings summary
+    checks["settings"] = {
+        "location": settings.get("location_name"),
+        "lat": settings.get("latitude"),
+        "lon": settings.get("longitude"),
+        "lists_backend": settings.get("lists_backend", "apple_sync"),
+        "timezone": settings.get("timezone", config.DEFAULT_TIMEZONE),
+    }
+
+    all_ok = all(checks.get(k, {}).get("ok", False) for k in ["internet", "google_auth", "weather", "calendar"])
+    return jsonify({"status": "healthy" if all_ok else "degraded", "checks": checks})
+
+
 @app.route("/api/refresh", methods=["POST"])
 def api_refresh_all():
     """Manual refresh trigger — resets chores and returns status."""

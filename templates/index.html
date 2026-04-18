@@ -1266,6 +1266,15 @@ h2.section-title:first-child { margin-top: 0; }
             </div>
           </div>
         </div>
+        <div class="card" style="margin-top:16px;">
+          <div class="card-title" style="display:flex; align-items:center; justify-content:space-between;">
+            Diagnostics
+            <button class="btn btn-outline" onclick="runDiagnostics()" style="font-size:12px;">Run Check</button>
+          </div>
+          <div id="diagnostics-result" style="font-size:13px; line-height:1.8; color:var(--text-dim);">
+            Tap "Run Check" to test internet, Google, and weather connections.
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2227,6 +2236,27 @@ async function exitKiosk() {
   if (confirm('This will close Chrome so you can access the desktop. Reopen with:\nchromium --kiosk --app=http://localhost:5000')) {
     await api('/api/exit-kiosk', {method: 'POST'});
   }
+}
+
+async function runDiagnostics() {
+  const el = document.getElementById('diagnostics-result');
+  el.innerHTML = '<span class="loading">Running checks...</span>';
+  const data = await api('/api/health');
+  if (!data) {
+    el.innerHTML = '<span style="color:var(--red)">Could not reach the backend server.</span>';
+    return;
+  }
+  const c = data.checks;
+  const icon = ok => ok ? '<span style="color:var(--green)">PASS</span>' : '<span style="color:var(--red)">FAIL</span>';
+  let html = `<div style="font-family:monospace; font-size:13px;">`;
+  html += `<div>Overall: <strong>${data.status === 'healthy' ? '<span style="color:var(--green)">Healthy</span>' : '<span style="color:var(--red)">Degraded</span>'}</strong></div><br>`;
+  html += `<div>${icon(c.internet?.ok)} Internet — ${c.internet?.ok ? 'Connected' : c.internet?.error}</div>`;
+  html += `<div>${icon(c.google_auth?.ok)} Google Auth — ${c.google_auth?.ok ? 'Token valid (expires ' + (c.google_auth.expiry || '?') + ')' : c.google_auth?.error}</div>`;
+  html += `<div>${icon(c.weather?.ok)} Weather — ${c.weather?.ok ? 'Working (' + c.weather.temp + '°F)' : c.weather?.error}</div>`;
+  html += `<div>${icon(c.calendar?.ok)} Calendar — ${c.calendar?.ok ? c.calendar.event_count + ' events today' : c.calendar?.error}</div>`;
+  html += `<br><div style="opacity:0.6">Location: ${c.settings?.location} | TZ: ${c.settings?.timezone} | Backend: ${c.settings?.lists_backend}</div>`;
+  html += `</div>`;
+  el.innerHTML = html;
 }
 
 /* ============================================================
