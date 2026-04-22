@@ -81,20 +81,21 @@ def _api_delete(path):
 def _task_to_item(task, collaborators=None):
     """Convert a Todoist task to our standard item dict."""
     due = task.get("due")
-    assignee_id = task.get("assignee_id")
+    # API returns responsible_uid (int) or assignee_id (string) depending on endpoint
+    assignee_id = task.get("responsible_uid") or task.get("assignee_id")
     assignee = None
     if assignee_id and collaborators:
-        assignee = collaborators.get(assignee_id)
+        assignee = collaborators.get(str(assignee_id))
     return {
         "id": task["id"],
         "title": task.get("content", ""),
-        "completed": task.get("is_completed", False),
+        "completed": task.get("is_completed") or task.get("checked", False),
         "completed_date": task.get("completed_at"),
-        "created": task.get("created_at"),
+        "created": task.get("created_at") or task.get("added_at"),
         "priority": task.get("priority", 1),
         "due_date": due.get("date") if due else None,
         "assignee": assignee,
-        "order": task.get("order", 0),
+        "order": task.get("order") or task.get("child_order", 0),
     }
 
 
@@ -156,7 +157,7 @@ def _get_collaborators(project_id):
     try:
         collabs = _api_get(f"projects/{project_id}/collaborators")
         if collabs:
-            return {c["id"]: c.get("name", c.get("email", "")) for c in collabs}
+            return {str(c["id"]): c.get("name", c.get("email", "")) for c in collabs}
     except Exception as e:
         logger.debug("Could not fetch collaborators: %s", e)
     return {}
