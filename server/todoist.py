@@ -78,9 +78,13 @@ def _api_delete(path):
     return {"ok": True}
 
 
-def _task_to_item(task):
+def _task_to_item(task, collaborators=None):
     """Convert a Todoist task to our standard item dict."""
     due = task.get("due")
+    assignee_id = task.get("assignee_id")
+    assignee = None
+    if assignee_id and collaborators:
+        assignee = collaborators.get(assignee_id)
     return {
         "id": task["id"],
         "title": task.get("content", ""),
@@ -89,6 +93,7 @@ def _task_to_item(task):
         "created": task.get("created_at"),
         "priority": task.get("priority", 1),
         "due_date": due.get("date") if due else None,
+        "assignee": assignee,
         "order": task.get("order", 0),
     }
 
@@ -146,15 +151,27 @@ def discover_lists():
         return None
 
 
+def _get_collaborators(project_id):
+    """Fetch collaborators for a project, returning {id: display_name} map."""
+    try:
+        collabs = _api_get(f"projects/{project_id}/collaborators")
+        if collabs:
+            return {c["id"]: c.get("name", c.get("email", "")) for c in collabs}
+    except Exception as e:
+        logger.debug("Could not fetch collaborators: %s", e)
+    return {}
+
+
 def get_items(list_name):
     """Fetch all tasks from a Todoist project."""
     project_id = _find_project_id(list_name)
     if not project_id:
         return None
     try:
+        collaborators = _get_collaborators(project_id)
         # Get active tasks
         active = _api_get("tasks", params={"project_id": project_id}) or []
-        items = _sort_items([_task_to_item(t) for t in active])
+        items = _sort_items([_task_to_item(t, collaborators) for t in active])
 
         # Get completed tasks via v1 API
         try:

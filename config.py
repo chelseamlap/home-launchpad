@@ -18,7 +18,6 @@ GOOGLE_CLIENT_SECRETS_FILE = os.path.join(BASE_DIR, "client_secret.json")
 GOOGLE_TOKEN_FILE = os.path.join(DATA_DIR, "google_token.json")
 GOOGLE_SCOPES = [
     "https://www.googleapis.com/auth/calendar.readonly",
-    "https://www.googleapis.com/auth/spreadsheets.readonly",
 ]
 
 # --- Reminders Lists ---

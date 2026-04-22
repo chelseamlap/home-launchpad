@@ -584,6 +584,13 @@ h2.section-title:first-child { margin-top: 0; }
 }
 .item-due.due-today { color: var(--orange); font-weight: 600; }
 .item-due.overdue { color: var(--red); font-weight: 600; }
+.item-assignee {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-left: 8px;
+  vertical-align: middle;
+}
 
 /* Add button */
 .add-btn {
@@ -1572,6 +1579,9 @@ function renderList(items, containerId, listKey, opts = {}) {
       const label = diff < 0 ? 'Overdue' : diff === 0 ? 'Today' : diff === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
       const dueClass = diff < 0 ? 'overdue' : diff === 0 ? 'due-today' : '';
       meta = `<span class="item-due ${dueClass}">${label}</span>`;
+    }
+    if (item.assignee) {
+      meta += `<span class="item-assignee">${escHTML(item.assignee)}</span>`;
     }
     return `
       <div class="list-row${completed}${priClass}" id="row-${item.id}"

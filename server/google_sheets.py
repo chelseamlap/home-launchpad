@@ -1,18 +1,52 @@
-"""Google Sheets integration for the Money tab budget data."""
+"""Google Sheets integration for the Money tab budget data.
+
+Uses a Google Service Account for authentication, scoped to only the
+sheets shared with it. Each user creates their own service account,
+shares a specific Drive folder with it, and puts their budget sheet there.
+
+SETUP:
+1. Go to https://console.cloud.google.com/
+2. Create or select your project
+3. Enable the Google Sheets API
+4. Go to IAM & Admin > Service Accounts > Create Service Account
+5. Download the JSON key file
+6. Save it as data/google_service_account.json
+7. In Google Drive, create a folder for your dashboard sheets
+8. Share that folder with the service account email
+   (the email looks like: name@project-id.iam.gserviceaccount.com)
+9. Put your budget spreadsheet in that folder
+"""
 import logging
+import os
 from datetime import datetime, timedelta
+
+from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-from server.google_auth import get_credentials
 
 logger = logging.getLogger(__name__)
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SERVICE_ACCOUNT_FILE = os.path.join(BASE_DIR, "data", "google_service_account.json")
+
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+
+
+def is_sheets_connected():
+    """Check if a service account key file exists."""
+    return os.path.exists(SERVICE_ACCOUNT_FILE)
+
 
 def _get_service():
-    """Build the Sheets API service."""
-    creds = get_credentials()
-    if not creds:
+    """Build the Sheets API service using service account credentials."""
+    if not os.path.exists(SERVICE_ACCOUNT_FILE):
+        logger.warning("No service account key at %s", SERVICE_ACCOUNT_FILE)
         return None
-    return build("sheets", "v4", credentials=creds)
+    try:
+        creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        return build("sheets", "v4", credentials=creds)
+    except Exception as e:
+        logger.error("Failed to build Sheets service: %s", e)
+        return None
 
 
 def get_budget_data(sheet_id):

@@ -27,7 +27,7 @@ from server.google_calendar import (
     get_today_events, get_week_events, get_upcoming_events,
     get_month_events, discover_calendars,
 )
-from server.google_sheets import get_budget_data
+from server.google_sheets import get_budget_data, is_sheets_connected
 from server.google_auth import is_authenticated
 
 logging.basicConfig(level=logging.INFO)
@@ -234,6 +234,7 @@ def api_budget():
 def api_get_settings():
     settings = config.load_settings()
     settings["google_connected"] = is_authenticated()
+    settings["sheets_connected"] = is_sheets_connected()
     return jsonify(settings)
 
 
@@ -412,7 +413,12 @@ def api_health():
     except Exception as e:
         checks["calendar"] = {"ok": False, "error": str(e)}
 
-    # 5. Settings summary
+    # 5. Google Sheets (service account)
+    checks["sheets"] = {"ok": is_sheets_connected(), "auth": "service_account"}
+    if not is_sheets_connected():
+        checks["sheets"]["error"] = "No service account key at data/google_service_account.json"
+
+    # 6. Settings summary
     checks["settings"] = {
         "location": settings.get("location_name"),
         "lat": settings.get("latitude"),

@@ -4,6 +4,7 @@ A touch-optimized family command center for a 24" Dell touchscreen on a Raspberr
 
 **New here?** Start with these guides:
 - **[implementation.md](docs/implementation.md)** — Step-by-step setup from scratch (written for non-technical users)
+- **[google-setup.md](docs/google-setup.md)** — Google Calendar + Sheets setup (OAuth & service account)
 - **[updates.md](docs/updates.md)** — How to update the Pi, change settings, and request new features
 
 ## Architecture
@@ -12,7 +13,7 @@ A touch-optimized family command center for a 24" Dell touchscreen on a Raspberr
 - **Frontend**: Single-page HTML/CSS/JS, themeable (light/dark/warm), 1920x1080 landscape
 - **Lists**: Apple Reminders — native macOS (JXA) with configurable Pi backend (Mac sync, Todoist, Google Tasks, or local JSON)
 - **Calendar**: Google Calendar API via OAuth2 (multi-calendar support)
-- **Budget**: Google Sheets API via OAuth2
+- **Budget**: Google Sheets API via Service Account (folder-scoped)
 - **Weather**: Open-Meteo (free, no API key)
 
 ---
@@ -51,33 +52,21 @@ The dashboard supports multiple list backends, configurable from **Home > Settin
 
 On macOS, the dashboard always uses native Apple Reminders access (JXA) regardless of this setting.
 
-### 2. Set Up Google OAuth2
+### 2. Set Up Google (Calendar + Sheets)
 
-You need a Google Cloud project with Calendar API, Sheets API, and Tasks API enabled.
+See **[Google Setup Guide](docs/google-setup.md)** for detailed instructions covering:
+- Creating a Google Cloud project
+- **Calendar** — OAuth2 login for your personal calendars
+- **Sheets** — Service account scoped to a single Drive folder (for budget/bills)
 
-```
-1. Go to https://console.cloud.google.com/
-2. Create a new project: "Home Launchpad"
-3. Go to APIs & Services → Library
-4. Enable: Google Calendar API
-5. Enable: Google Sheets API
-6. Enable: Google Tasks API
-7. Go to APIs & Services → Credentials
-8. Click "Create Credentials" → "OAuth client ID"
-9. Application type: "Desktop app"
-10. Download the JSON file
-11. Rename it to client_secret.json
-12. Place it in /home/pi/git-repo/home-launchpad/
-```
-
-**Run the OAuth flow:**
+Quick version:
 
 ```bash
-cd /home/pi/git-repo/home-launchpad
-python3 setup_google_oauth.py
-```
+# Calendar: place client_secret.json in project root, then:
+cd /home/pi/git-repo/home-launchpad && python3 setup_google_oauth.py
 
-This opens a browser. Sign in with your family Google account and grant Calendar, Sheets, and Tasks access. The token is stored locally in `data/google_token.json`.
+# Sheets: place service account key in data/, then share your Drive folder with the service account email
+```
 
 ### 3. Configure Google Calendars
 
@@ -85,7 +74,7 @@ After connecting your Google account, go to **Home > Google Calendars** to selec
 
 ### 4. Set Up the Google Sheet for Budget
 
-Create a Google Sheet with two tabs:
+Create a Google Sheet **inside the Drive folder you shared with the service account** with two tabs:
 
 **Tab 1: "Budget"**
 | Category | Budget | Spent |
@@ -331,6 +320,7 @@ home-launchpad/
 ├── .gitignore              # Excludes secrets & data files from git
 ├── docs/
 │   ├── implementation.md   # Setup guide for non-technical users
+│   ├── google-setup.md     # Google Calendar + Sheets setup (OAuth & service account)
 │   ├── updates.md          # How to update, change settings, request features
 │   └── mac-sync-setup.md   # How to set up Mac → Pi reminders sync
 ├── server/
@@ -339,7 +329,7 @@ home-launchpad/
 │   ├── reminders_bridge.py # Lists backend dispatcher (JXA / sync / Todoist / Google Tasks / local)
 │   ├── google_auth.py      # Google OAuth2 handler
 │   ├── google_calendar.py  # Google Calendar API (multi-calendar)
-│   ├── google_sheets.py    # Google Sheets API (budget)
+│   ├── google_sheets.py    # Google Sheets API via service account (budget)
 │   ├── google_tasks.py     # Google Tasks API (lists backend)
 │   ├── todoist.py          # Todoist REST API (lists backend)
 │   └── setup_google_oauth.py # One-time OAuth setup script
@@ -352,7 +342,8 @@ home-launchpad/
 ├── client_secret.json      # (you provide, gitignored) Google OAuth credentials
 └── data/                   # (auto-created, gitignored) runtime data
     ├── settings.json
-    ├── google_token.json
-    ├── todoist_token.txt    # (optional) Todoist API token
-    └── reminders_*.json    # Local list data
+    ├── google_token.json          # OAuth token (Calendar)
+    ├── google_service_account.json # Service account key (Sheets)
+    ├── todoist_token.txt           # (optional) Todoist API token
+    └── reminders_*.json            # Local list data
 ```
