@@ -38,7 +38,7 @@ def get_credentials():
     creds = None
 
     if os.path.exists(TOKEN_FILE):
-        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+        creds = Credentials.from_authorized_user_file(TOKEN_FILE)
 
     if creds and creds.expired and creds.refresh_token:
         try:

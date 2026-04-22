@@ -1868,8 +1868,10 @@ async function loadSettings() {
     backendSel.addEventListener('change', updateBackendHint);
     if (settings.background_url) applyBackground(settings.background_url);
     const gc = settings.google_connected;
+    const sc = settings.sheets_connected;
     document.getElementById('google-status').innerHTML =
-      `<span class="status-dot ${gc ? 'connected' : 'disconnected'}"></span> ${gc ? 'Connected' : 'Not connected — run setup_google_oauth.py'}`;
+      `<span class="status-dot ${gc ? 'connected' : 'disconnected'}"></span> Calendar: ${gc ? 'Connected' : 'Not connected — run setup_google_oauth.py'}<br>`
+      + `<span class="status-dot ${sc ? 'connected' : 'disconnected'}"></span> Sheets: ${sc ? 'Connected (service account)' : 'Not connected — add data/google_service_account.json'}`;
   }
 
   // Discover available Apple Reminders lists and Google Calendars
