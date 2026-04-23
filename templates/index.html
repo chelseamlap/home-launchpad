@@ -798,12 +798,15 @@ h2.section-title:first-child { margin-top: 0; }
   gap: 14px;
 }
 
-/* Lists grid — adapts to count */
+/* Lists grid — adapts to count, fills available height */
 .lists-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 14px;
+  height: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
+#panel-lists.active { display: flex; flex-direction: column; overflow: hidden; }
+#panel-lists .lists-grid { flex: 1; min-height: 0; }
 .list-card {
   background: var(--bg-card);
   border-radius: var(--radius);
@@ -811,18 +814,19 @@ h2.section-title:first-child { margin-top: 0; }
   border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  min-height: 200px;
-  max-height: 400px;
+  min-height: 0;
   opacity: var(--card-opacity, 1);
 }
-.list-card .card-title { margin-bottom: 10px; }
+.list-card .card-title { margin-bottom: 10px; flex-shrink: 0; }
 .list-card-items {
   flex: 1;
   overflow-y: auto;
   margin-bottom: 8px;
+  min-height: 0;
 }
 .list-card .add-btn {
   margin-top: auto;
+  flex-shrink: 0;
   min-height: 40px;
   font-size: 14px;
 }
@@ -1534,9 +1538,11 @@ function wxIcon(emoji, size) {
    ============================================================ */
 function renderWeatherCurrent(w) {
   if (!w || w.error) {
-    document.getElementById('weather-current').innerHTML = '<div class="empty-state">Weather unavailable</div>';
+    document.getElementById('weather-current').innerHTML =
+      `<div class="empty-state">Weather unavailable${w && w.error ? ': ' + w.error : ''}</div>`;
     return;
   }
+  try {
   const c = w.current;
   const wEl = document.getElementById('weather-current');
   wEl.className = 'weather-now';
@@ -1565,6 +1571,10 @@ function renderWeatherCurrent(w) {
       <div class="d-rain">${d.rain_pct}%</div>
     </div>
   `).join('');
+  } catch (e) {
+    console.error('Weather render error:', e);
+    document.getElementById('weather-current').innerHTML = '<div class="empty-state">Weather render error</div>';
+  }
 }
 
 /* ============================================================
@@ -1891,7 +1901,7 @@ async function loadAllLists() {
   // Build list cards dynamically
   const grid = document.getElementById('lists-grid');
   grid.innerHTML = lists.map(l => `
-    <div class="list-card">
+    <div class="list-card" data-list-key="${l.key}">
       <div class="card-title">${escHTML(l.name)}</div>
       <div class="list-card-items" id="list-${l.key.replace(/_/g, '-')}"></div>
       <button class="add-btn" onclick="openAddItem('${l.key}')">
@@ -1902,12 +1912,67 @@ async function loadAllLists() {
 
   // Fetch all list data
   const results = await Promise.all(lists.map(l => api(`/api/reminders/${l.key}`)));
+  const itemCounts = [];
   results.forEach((data, i) => {
+    const count = data ? (data.items || []).length : 0;
+    itemCounts.push(count);
     if (data) {
       const containerId = 'list-' + lists[i].key.replace(/_/g, '-');
       renderList(data.items, containerId, lists[i].key);
     }
   });
+
+  // Dynamic grid layout based on list count and content
+  arrangeListGrid(grid, lists.length, itemCounts);
+}
+
+function arrangeListGrid(grid, count, itemCounts) {
+  const cards = grid.querySelectorAll('.list-card');
+  // Reset any previous layout overrides
+  cards.forEach(c => { c.style.gridRow = ''; c.style.gridColumn = ''; });
+  grid.style.gridTemplateColumns = '';
+  grid.style.gridTemplateRows = '';
+
+  if (count <= 0) return;
+
+  if (count <= 3) {
+    // Side by side, each fills full height
+    grid.style.gridTemplateColumns = `repeat(${count}, 1fr)`;
+    grid.style.gridTemplateRows = '1fr';
+  } else {
+    // Find the list with the most items — it gets full height
+    let maxIdx = 0;
+    itemCounts.forEach((c, i) => { if (c > itemCounts[maxIdx]) maxIdx = i; });
+    const others = count - 1;
+    const stackRows = others <= 2 ? others : Math.ceil(others / 2);
+
+    if (count <= 4) {
+      // 2 columns: tall list on left, others stacked on right
+      grid.style.gridTemplateColumns = '1fr 1fr';
+      grid.style.gridTemplateRows = `repeat(${others}, 1fr)`;
+      cards[maxIdx].style.gridRow = `1 / ${others + 1}`;
+      cards[maxIdx].style.gridColumn = '1';
+      let row = 1;
+      cards.forEach((c, i) => {
+        if (i !== maxIdx) { c.style.gridRow = `${row}`; c.style.gridColumn = '2'; row++; }
+      });
+    } else {
+      // 3 columns: tall list spans full height in col 1, others fill a 2-col grid
+      grid.style.gridTemplateColumns = '1fr 1fr 1fr';
+      grid.style.gridTemplateRows = `repeat(${Math.ceil(others / 2)}, 1fr)`;
+      cards[maxIdx].style.gridRow = `1 / ${Math.ceil(others / 2) + 1}`;
+      cards[maxIdx].style.gridColumn = '1';
+      let row = 1, col = 2;
+      cards.forEach((c, i) => {
+        if (i !== maxIdx) {
+          c.style.gridRow = `${row}`;
+          c.style.gridColumn = `${col}`;
+          col++;
+          if (col > 3) { col = 2; row++; }
+        }
+      });
+    }
+  }
 }
 
 async function loadCalendar() {
